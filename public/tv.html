@@ -56,9 +56,12 @@
   <script src="/common.js"></script>
   <script>
     const socket = io();
-    const url = location.origin + '/';
-    $('#qr').src = '/qr.svg?u=' + encodeURIComponent(url);
-    $('#url').textContent = url.replace(/^https?:\/\//, '');
+    function showJoin(u) {
+      $('#qr').src = '/qr.svg?u=' + encodeURIComponent(u);
+      $('#url').textContent = u.replace(/^https?:\/\//, '');
+    }
+    showJoin(location.origin + '/');
+    useWifiLink(showJoin);
     $('#tagline').textContent = TAGLINES[0];
     let ti = 0; setInterval(() => { ti = (ti + 1) % TAGLINES.length; $('#tagline').textContent = TAGLINES[ti]; }, 9000);
     const timer = makeTimer($('#tvTimer'));

@@ -178,9 +178,14 @@
     let draft = [];          // rounds being edited
     const timer = makeTimer($('#timerHost'));
 
-    const joinUrl = location.origin + '/';
-    $('#joinUrl').textContent = joinUrl.replace(/^https?:\/\//, '');
-    $('#qr').src = '/qr.svg?u=' + encodeURIComponent(joinUrl);
+    let joinUrl = location.origin + '/';
+    function showJoin(u) {
+      joinUrl = u;
+      $('#joinUrl').textContent = u.replace(/^https?:\/\//, '');
+      $('#qr').src = '/qr.svg?u=' + encodeURIComponent(u);
+    }
+    showJoin(joinUrl);
+    useWifiLink(showJoin);
     $('#tvLink').href = '/tv';
     $('#copyLink').onclick = () => navigator.clipboard.writeText(joinUrl).then(() => toast('Link copied'), () => toast(joinUrl));
 

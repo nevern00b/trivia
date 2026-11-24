@@ -74,3 +74,12 @@ function renderBoard(ol, rows, meName) {
 
 // Keep a free-tier server awake during the party.
 setInterval(() => fetch('/ping').catch(() => {}), 4 * 60 * 1000);
+
+// When the host opens the game as "localhost" on their own laptop, guests need the
+// laptop's Wi-Fi address instead. Ask the server for it and use that for the link and QR code.
+function useWifiLink(cb) {
+  if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
+  fetch('/info').then((r) => r.json()).then((info) => {
+    if (info.lan && info.lan[0]) cb(info.lan[0]);
+  }).catch(() => {});
+}

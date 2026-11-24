@@ -9,7 +9,27 @@ const QRCode = require('qrcode');
 const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
-const HOST_PIN = String(process.env.HOST_PIN || 'brooklyn');
+const os = require('os');
+// PIN: HOST_PIN setting if given, otherwise the first line of host-pin.txt, otherwise "brooklyn".
+function readPinFile() {
+  try { return fs.readFileSync(path.join(__dirname, 'host-pin.txt'), 'utf8').split(/\r?\n/)[0].trim(); } catch (_) { return ''; }
+}
+const HOST_PIN = String(process.env.HOST_PIN || readPinFile() || 'brooklyn');
+
+// Wi-Fi / home-network addresses of this computer, best guess first.
+function lanAddresses() {
+  const out = [];
+  for (const [name, list] of Object.entries(os.networkInterfaces())) {
+    for (const a of list || []) {
+      if (a.family !== 'IPv4' && a.family !== 4) continue;
+      if (a.internal || a.address.startsWith('169.254.')) continue;
+      const virtual = /vbox|vmnet|virtual|docker|veth|utun|bridge|tailscale|zt|hyper-v|wsl/i.test(name);
+      const home = /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(a.address);
+      out.push({ address: a.address, score: (home ? 2 : 0) + (virtual ? -3 : 0) + (/^(en|wl|wi-?fi|eth)/i.test(name) ? 1 : 0) });
+    }
+  }
+  return out.sort((x, y) => y.score - x.score).map((x) => x.address);
+}
 const SECONDS = Number(process.env.QUESTION_SECONDS || 20);
 const GRACE_MS = 1500; // late answers still count if they arrive within this window
 const QUESTIONS_FILE = path.join(__dirname, 'questions.json');
@@ -173,6 +193,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/host', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'host.html')));
 app.get('/tv', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'tv.html')));
 app.get('/ping', (_req, res) => res.send('ok'));
+// Pages opened as "localhost" use this to show guests a link that works from their phones.
+app.get('/info', (_req, res) => res.json({ lan: lanAddresses().map((ip) => `http://${ip}:${PORT}/`) }));
 app.get('/qr.svg', async (req, res) => {
   const url = String(req.query.u || '').slice(0, 300);
   if (!/^https?:\/\//.test(url)) return res.status(400).send('bad url');
@@ -349,8 +371,20 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Ho ho ho trivia running on http://localhost:${PORT}`);
-  console.log(`Host page: http://localhost:${PORT}/host  (PIN: ${HOST_PIN === 'brooklyn' ? 'brooklyn, the default' : 'set by HOST_PIN'})`);
+  const lan = lanAddresses()[0];
+  console.log('');
+  console.log("  THERE'S SOME HO HO HO'S IN THIS HOUSE");
+  console.log('  ------------------------------------');
+  console.log(`  Your host page:   http://localhost:${PORT}/host`);
+  console.log(`  Host PIN:         ${HOST_PIN}`);
+  console.log(`  Guests join at:   ${lan ? `http://${lan}:${PORT}/` : '(connect this computer to Wi-Fi, then restart)'}`);
+  console.log('  Keep this window open during the party. Close it to stop the game.');
+  console.log('');
+});
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') console.log(`\n  The game is already running in another window (port ${PORT} is busy). Use that one, or close it first.\n`);
+  else console.log(e);
+  process.exit(1);
 });
 
 module.exports = { autoMark, norm };

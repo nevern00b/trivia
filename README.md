@@ -4,9 +4,9 @@ Brooklyn Christmas party trivia. Guests join from their phones, you run the show
 
 | Page | Who | Address |
 |---|---|---|
-| Player | Guests | `https://YOUR-APP.onrender.com/` |
-| Host | You (needs your PIN) | `https://YOUR-APP.onrender.com/host` |
-| TV | Optional, put it on a TV or laptop everyone can see | `https://YOUR-APP.onrender.com/tv` |
+| Player | Guests | the Wi-Fi link shown on your host page, like `http://192.168.1.23:3000/` |
+| Host | You (needs your PIN) | `http://localhost:3000/host` on your laptop |
+| TV | Optional, cast or plug a TV into your laptop | `http://localhost:3000/tv` |
 
 ## How a game goes
 
@@ -28,21 +28,45 @@ Your saved questions are also kept in your host browser. If the free server rest
 time you open the host page on the same device. For extra safety, press **Download backup file** and replace
 `questions.json` in this folder with it.
 
-## Hosting it for free on Render
+## Running it on your laptop (the simple way)
 
-1. Put this folder in a GitHub repository (see the step-by-step guide shared with you).
-2. On https://render.com sign in with GitHub, then **New → Blueprint**, pick the repository, and press **Apply**.
-3. When it asks for `HOST_PIN`, type the PIN you want for the host page.
-4. Wait about 3 minutes. Your link is shown at the top of the service page.
+Guests' phones must be on the **same Wi-Fi** as your laptop.
+
+**One time, a day or two before**
+1. Install Node.js from https://nodejs.org (click the big **LTS** button and run the installer).
+2. Download this project: on GitHub, click the green **Code** button, then **Download ZIP**, and unzip it somewhere easy like your Desktop.
+3. Pick your host PIN: open `host-pin.txt`, replace `brooklyn` with your own PIN, and save.
+4. Do a test run (steps below) so the first-time setup happens while you're still online and calm.
+
+**At the party**
+1. Plug in your laptop.
+2. Double-click **Start Trivia (Mac).command** or **Start Trivia (Windows).bat**.
+   - Mac, first time: if it says it "can't be opened", right-click the file, choose **Open**, then **Open** again.
+   - If your computer asks whether to allow incoming network connections, click **Allow** (on Windows, tick *Private networks*).
+3. A black window opens and your host page opens in the browser. Type your PIN.
+4. Guests scan the QR code on the host page (or the TV page) or type the link shown under it, like `192.168.1.23:3000`.
+5. Keep the black window open the whole game. Closing it ends the game.
+
+**Keeping the laptop awake:** on a Mac the start file does it for you while the game is running. On Windows go to
+Settings → System → Power and set "When plugged in, put my device to sleep after" to **Never** for the party.
+Either way, don't close the lid.
+
+**If guests can't connect:** make sure they're on your home Wi-Fi, not a "guest" network or mobile data, since many
+routers keep guest networks from reaching other devices.
+
+**No double-click?** Open Terminal (Mac) or Command Prompt (Windows), type `cd ` and drag the folder into the window,
+press Enter, then run `npm install` once and `npm start` each time.
+
+## Hosting it online instead (optional)
+
+1. On https://render.com sign in with GitHub, then **New → Blueprint**, pick this repository, and press **Apply**.
+2. When it asks for `HOST_PIN`, type the PIN you want for the host page.
+3. Wait about 3 minutes. Your link is shown at the top of the service page.
 
 The free plan goes to sleep after 15 minutes with nobody on it, and takes about a minute to wake up.
 Open the host page 5 minutes before the game. While the game is running, the pages keep it awake.
 
-## Settings (optional, in Render under Environment)
+## Settings (optional)
 
-- `HOST_PIN`: the host page PIN. Default is `brooklyn` if you don't set one.
+- Host PIN: first line of `host-pin.txt`, or the `HOST_PIN` setting online. Default is `brooklyn`.
 - `QUESTION_SECONDS`: countdown length. Default `20`.
-
-## Run it on your own computer (optional)
-
-Install Node.js 18 or newer, then in this folder run `npm install` and `npm start`, and open http://localhost:3000/host.
