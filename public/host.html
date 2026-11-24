@@ -13,20 +13,20 @@
     .grid .card { margin: 0 0 16px; }
     .tabs { display: flex; gap: 8px; margin: 8px 0 0; }
     .tabs button { background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
-    .tabs button.on { background: var(--gold); color: #1a1300; border-color: var(--gold); }
+    .tabs button.on { background: #fff; color: var(--red); border-color: #fff; }
     .topbar { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between; padding-top: 12px; }
-    .topbar .brand { font-size: 24px; text-shadow: 2px 2px 0 var(--red); }
-    .linkbox { display: flex; gap: 12px; align-items: center; background: rgba(0,0,0,.25); border: 1px solid var(--line); padding: 10px; border-radius: 14px; }
+    .topbar .brand { font-size: 26px; color: #fff; text-shadow: 2px 2px 0 var(--gold-btn); }
+    .linkbox { display: flex; gap: 12px; align-items: center; background: rgba(60,0,10,.35); border: 1px solid var(--line); padding: 10px; border-radius: 14px; }
     .linkbox img { width: 84px; height: 84px; border-radius: 8px; background: #fff; }
     .linkbox code { font-size: 15px; color: var(--gold); word-break: break-all; }
-    .phase { font: 400 12px Bungee, sans-serif; padding: 4px 10px; border-radius: 999px; background: var(--red); }
+    .phase { font: 400 12px Bungee, sans-serif; padding: 4px 10px; border-radius: 999px; background: var(--red); color: #fff; }
     .ans { width: 100%; border-collapse: collapse; }
     .ans td { padding: 9px 6px; border-top: 1px solid var(--line); vertical-align: middle; }
     .ans td.n { font-weight: 700; width: 30%; }
     .ans td.t { word-break: break-word; }
     .ans td.m { white-space: nowrap; text-align: right; }
     .mark { padding: 7px 11px; font-size: 15px; border-radius: 9px; background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
-    .mark.yes.on { background: var(--green); color: #04220f; border-color: var(--green); }
+    .mark.yes.on { background: var(--green); color: #fff; border-color: var(--green); }
     .mark.no.on { background: var(--red); color: #fff; border-color: var(--red); }
     .qlist { list-style: none; margin: 0; padding: 0; }
     .qlist li { display: flex; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
@@ -40,7 +40,7 @@
     .x { background: transparent; color: var(--muted); border: 0; box-shadow: none; padding: 4px 8px; font-size: 16px; }
     .bigq { font-size: 24px; font-weight: 800; line-height: 1.25; margin: 6px 0; }
     .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-    .editor-round { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; background: rgba(0,0,0,.18); }
+    .editor-round { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; background: var(--soft); }
     .qrow { display: grid; grid-template-columns: 28px minmax(0, 2fr) minmax(0, 1fr) 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
     .qrow input { font-size: 15px; padding: 10px; }
     @media (max-width: 640px) { .qrow { grid-template-columns: 22px 1fr 36px; } .qrow .a { grid-column: 2; } }
@@ -68,12 +68,15 @@
 
   <div class="wrap wide hidden" id="app">
     <div class="topbar">
+      <div class="row" style="gap:14px;align-items:flex-end">
+        <img class="mc small" src="/mc.svg" alt="MC Big Poppa Claus">
       <div>
         <div class="brand">HO HO HO'S IN THIS HOUSE</div>
         <div class="tabs">
           <button class="on" data-tab="game">Run the game</button>
           <button data-tab="questions">Questions</button>
         </div>
+      </div>
       </div>
       <div class="linkbox">
         <img id="qr" alt="QR code for the player link">
@@ -263,7 +266,7 @@
       const st = S;
       const labels = { lobby: 'Lobby', question: 'Live', closed: "Time's up", reveal: 'Answer shown', leaderboard: 'Leaderboard', final: 'Final' };
       $('#phase').textContent = labels[st.phase];
-      $('#phase').style.background = st.phase === 'question' ? 'var(--green)' : st.phase === 'closed' ? 'var(--red)' : 'var(--card-2)';
+      $('#phase').style.background = st.phase === 'question' ? 'var(--green)' : st.phase === 'closed' ? 'var(--red)' : '#a8780f';
       const curQ = st.q >= 0 && st.rounds[st.r] ? st.rounds[st.r].questions[st.q] : null;
       $('#where').textContent = curQ ? `${st.rounds[st.r].title} · Q${st.q + 1} of ${st.rounds[st.r].questions.length}` : 'No question released yet';
       $('#nowQ').textContent = curQ ? curQ.q : 'Waiting for guests. Release the first question when everyone is in.';

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice">
   <!-- brownstones and skyline -->
-  <g fill="#0b1633">
+  <g fill="#4a0611">
     <rect x="0" y="120" width="60" height="100"/><rect x="62" y="100" width="48" height="120"/>
     <rect x="112" y="130" width="70" height="90"/><rect x="184" y="90" width="40" height="130"/>
     <rect x="226" y="140" width="80" height="80"/><rect x="880" y="110" width="56" height="110"/>
@@ -19,11 +19,11 @@
     <rect x="1170" y="125" width="8" height="10"/>
   </g>
   <!-- bridge cables -->
-  <g stroke="#1c2d5c" stroke-width="2" fill="none">
+  <g stroke="#7a1424" stroke-width="2" fill="none">
     <path d="M300 200 Q 400 120 455 40"/><path d="M455 40 Q 600 170 745 40"/><path d="M745 40 Q 800 120 900 200"/>
     <path d="M300 200 Q 410 140 455 70"/><path d="M455 70 Q 600 185 745 70"/><path d="M745 70 Q 790 140 900 200"/>
   </g>
-  <g stroke="#1c2d5c" stroke-width="1">
+  <g stroke="#7a1424" stroke-width="1">
     <line x1="480" y1="70" x2="480" y2="185"/><line x1="510" y1="95" x2="510" y2="185"/>
     <line x1="540" y1="115" x2="540" y2="185"/><line x1="570" y1="127" x2="570" y2="185"/>
     <line x1="600" y1="131" x2="600" y2="185"/><line x1="630" y1="127" x2="630" y2="185"/>
@@ -31,19 +31,19 @@
     <line x1="720" y1="70" x2="720" y2="185"/>
   </g>
   <!-- towers with twin pointed arches -->
-  <g fill="#14224a">
+  <g fill="#3a040e">
     <path d="M430 220 V40 h50 V220 h-12 V110 q-6-22-11-22 q-5 0-11 22 V220 h-4 V110 q-6-22-11-22 q-5 0-11 22 V220z"/>
     <path d="M720 220 V40 h50 V220 h-12 V110 q-6-22-11-22 q-5 0-11 22 V220 h-4 V110 q-6-22-11-22 q-5 0-11 22 V220z"/>
   </g>
-  <rect x="290" y="185" width="620" height="8" fill="#14224a"/>
+  <rect x="290" y="185" width="620" height="8" fill="#3a040e"/>
   <!-- string lights on the deck -->
   <g>
-    <circle cx="320" cy="183" r="2.5" fill="#e8413c"/><circle cx="360" cy="183" r="2.5" fill="#3fbf6f"/>
-    <circle cx="400" cy="183" r="2.5" fill="#f6c453"/><circle cx="500" cy="183" r="2.5" fill="#e8413c"/>
-    <circle cx="540" cy="183" r="2.5" fill="#3fbf6f"/><circle cx="580" cy="183" r="2.5" fill="#f6c453"/>
-    <circle cx="620" cy="183" r="2.5" fill="#e8413c"/><circle cx="660" cy="183" r="2.5" fill="#3fbf6f"/>
-    <circle cx="700" cy="183" r="2.5" fill="#f6c453"/><circle cx="800" cy="183" r="2.5" fill="#e8413c"/>
-    <circle cx="840" cy="183" r="2.5" fill="#3fbf6f"/><circle cx="880" cy="183" r="2.5" fill="#f6c453"/>
+    <circle cx="320" cy="183" r="2.5" fill="#f5cf5a"/><circle cx="360" cy="183" r="2.5" fill="#ffffff"/>
+    <circle cx="400" cy="183" r="2.5" fill="#f6c453"/><circle cx="500" cy="183" r="2.5" fill="#f5cf5a"/>
+    <circle cx="540" cy="183" r="2.5" fill="#ffffff"/><circle cx="580" cy="183" r="2.5" fill="#f6c453"/>
+    <circle cx="620" cy="183" r="2.5" fill="#f5cf5a"/><circle cx="660" cy="183" r="2.5" fill="#ffffff"/>
+    <circle cx="700" cy="183" r="2.5" fill="#f6c453"/><circle cx="800" cy="183" r="2.5" fill="#f5cf5a"/>
+    <circle cx="840" cy="183" r="2.5" fill="#ffffff"/><circle cx="880" cy="183" r="2.5" fill="#f6c453"/>
   </g>
   <rect x="0" y="212" width="1200" height="8" fill="#e9eef8" opacity=".9"/>
 </svg>

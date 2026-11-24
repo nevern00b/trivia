@@ -12,14 +12,14 @@
   <div id="conn" class="conn hidden">Reconnecting…</div>
   <div class="wrap">
     <div class="brand-block">
-      <div class="brand">HO HO HO'S<br>IN THIS HOUSE</div>
-      <div class="tag" id="tagline">There's some ho ho ho's in this house</div>
-      <div class="sub">Brooklyn Holiday Trivia</div>
+      <div id="mcTop"></div>
+      <div class="brand" style="margin-top:10px">HO HO HO'S<br>IN THIS HOUSE</div>
+      <div class="sub" style="color:var(--gold);font-weight:700;letter-spacing:2px">✦ BROOKLYN HOLIDAY TRIVIA ✦</div>
     </div>
 
     <!-- join -->
     <section id="v-join" class="card candy hidden">
-      <h2 style="font-size:20px;margin-bottom:12px">Where Brooklyn at?</h2>
+      <h2 style="font-size:24px;margin-bottom:12px;color:var(--red)">Where Brooklyn at? 🎅</h2>
       <form id="joinForm">
         <label for="name">Your name (what shows on the leaderboard)</label>
         <input id="name" type="text" maxlength="24" autocomplete="nickname" placeholder="e.g. Auntie Dee" required>
@@ -56,10 +56,10 @@
       <div class="kicker" id="cKicker"></div>
       <div class="question" id="cText" style="margin-top:12px"></div>
       <p class="muted" id="cMine"></p>
-      <div id="cWait"><h3 style="font-size:22px">Time's up! Pencils down.</h3><p class="muted">The host is checking answers…</p></div>
+      <div id="cWait"><h3 style="font-size:24px">⏰ Time's up! Pencils down.</h3><p class="muted">The host is checking answers…</p></div>
       <div id="cReveal" class="hidden">
         <div class="muted">The answer was</div>
-        <h2 id="cAnswer" style="font-size:28px;color:var(--gold);margin:6px 0 16px"></h2>
+        <h2 id="cAnswer" style="font-size:30px;color:var(--red);margin:6px 0 16px"></h2>
         <div id="cResult" class="result"></div>
       </div>
     </section>
@@ -69,7 +69,7 @@
       <div class="center">
         <div class="kicker" id="bKicker">Leaderboard</div>
         <h2 id="bTitle" style="font-size:26px;margin:6px 0 4px"></h2>
-        <p class="tag" id="bTag" style="font-size:20px;margin:4px 0 14px"></p>
+        <p class="tag" id="bTag" style="font-size:20px;margin:4px 0 14px;color:var(--red)"></p>
       </div>
       <ol class="board" id="board"></ol>
     </section>
@@ -90,7 +90,9 @@
     const show = (v) => views.forEach((x) => $('#v-' + x).classList.toggle('hidden', x !== v));
     const timer = makeTimer($('#timer'));
     let joined = false, lastState = null, lastQKey = '', submitted = '', resultLine = '';
-    $('#tagline').textContent = pick(TAGLINES);
+    const topLine = TAGLINES[0];
+    $('#mcTop').append(mcSays(topLine));
+    let mcTopShown = true;
 
     function join(name) {
       socket.emit('player:join', { token: store.get('ho3.token'), name }, (res) => {
@@ -153,6 +155,7 @@
     }
     function renderInner(st, prevPhase) {
       const qKey = `${st.roundIndex}-${st.questionNumber}`;
+      $('#mcTop').classList.toggle('hidden', st.phase === 'question' || st.phase === 'closed' || st.phase === 'reveal');
       const kicker = `${st.roundTitle} · Question ${st.questionNumber} of ${st.questionCount}`;
       $('#footer').textContent = st.me ? `${st.me.name} · ${st.me.score} point${st.me.score === 1 ? '' : 's'}` : '';
 
@@ -192,9 +195,16 @@
         $('#cReveal').classList.toggle('hidden', !rev);
         if (rev) {
           $('#cAnswer').textContent = st.answer;
-          if (!resultLine) resultLine = st.myCorrect ? pick(RIGHT_LINES) : pick(WRONG_LINES);
-          $('#cResult').className = 'result ' + (st.myCorrect ? 'yes' : 'no');
-          $('#cResult').textContent = (st.myCorrect ? '✅ ' : '❌ ') + resultLine;
+          const line = st.myCorrect ? RIGHT_LINE : WRONG_LINE;
+          if (resultLine !== qKey) {
+            resultLine = qKey;
+            $('#cResult').className = 'result ' + (st.myCorrect ? 'yes' : 'no');
+            $('#cResult').replaceChildren(mcSays((st.myCorrect ? '✨ ' : '') + line, 'small'));
+            if (st.myCorrect) { confetti(); $('#cResult .mc').classList.add('hype'); }
+          } else if ($('#cResult').classList.contains('yes') !== !!st.myCorrect) {
+            resultLine = ''; // host changed the mark: redraw
+            render(st);
+          }
         }
       } else if (st.phase === 'leaderboard' || st.phase === 'final') {
         timer.stop();
@@ -202,7 +212,8 @@
         const final = st.phase === 'final';
         $('#bKicker').textContent = final ? 'Final results' : 'Leaderboard';
         $('#bTitle').textContent = final ? (st.leaderboard && st.leaderboard[0] ? `${st.leaderboard[0].name} runs Brooklyn!` : 'Thanks for playing!') : (st.boardTitle || 'Standings');
-        $('#bTag').textContent = final ? 'Merry Christmas to the whole borough' : (st.me && st.me.rank === 1 ? 'Big Poppa status 👑' : 'Spread love, it’s the Brooklyn way');
+        $('#bTag').textContent = final ? 'Merry Christmas to the whole borough 🎄' : (st.me && st.me.rank === 1 ? 'Big Poppa status 👑' : 'Spread love, it’s the Brooklyn way');
+        if (final && st.me && st.me.rank === 1 && !window.__wonConfetti) { window.__wonConfetti = true; confetti(140); }
         renderBoard($('#board'), st.leaderboard, st.me && st.me.name);
       }
     }

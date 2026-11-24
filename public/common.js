@@ -7,8 +7,8 @@ const TAGLINES = [
   'Big Poppa, big presents',
   'Where Brooklyn at? Under the mistletoe.',
 ];
-const RIGHT_LINES = ['Juicy!', 'Big Poppa approves', 'Brooklyn’s finest', 'You know very well who you are'];
-const WRONG_LINES = ["If you don't know, now you know", 'Coal in your stocking', 'Fuhgeddaboudit', 'Next one, Brooklyn'];
+const RIGHT_LINE = 'It was all a dream';
+const WRONG_LINE = "If you don't know, now you know";
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -33,8 +33,8 @@ function makeTimer(root) {
   const R = 52, C = 2 * Math.PI * R;
   root.classList.add('timer');
   root.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
-    <circle cx="60" cy="60" r="${R}" stroke="rgba(255,255,255,.12)" stroke-width="10" fill="none"/>
-    <circle class="arc" cx="60" cy="60" r="${R}" stroke="#f6c453" stroke-width="10" fill="none" stroke-linecap="round"
+    <circle cx="60" cy="60" r="${R}" stroke="rgba(200,16,46,.12)" stroke-width="10" fill="none"/>
+    <circle class="arc" cx="60" cy="60" r="${R}" stroke="#e8b931" stroke-width="10" fill="none" stroke-linecap="round"
       stroke-dasharray="${C}" stroke-dashoffset="0"/></svg><div class="num">20</div>`;
   const arc = root.querySelector('.arc'), num = root.querySelector('.num');
   let endAt = 0, total = 20, raf = 0, onZero = null, fired = false;
@@ -43,7 +43,7 @@ function makeTimer(root) {
     const secs = Math.ceil(left / 1000);
     num.textContent = secs;
     arc.style.strokeDashoffset = String(C * (1 - left / (total * 1000)));
-    arc.style.stroke = secs <= 5 ? '#e8413c' : '#f6c453';
+    arc.style.stroke = secs <= 5 ? '#c8102e' : '#e8b931';
     root.classList.toggle('low', secs <= 5 && left > 0);
     if (left > 0) raf = requestAnimationFrame(tick);
     else if (!fired) { fired = true; onZero && onZero(); }
@@ -82,4 +82,29 @@ function useWifiLink(cb) {
   fetch('/info').then((r) => r.json()).then((info) => {
     if (info.lan && info.lan[0]) cb(info.lan[0]);
   }).catch(() => {});
+}
+
+// String lights on every page.
+document.addEventListener('DOMContentLoaded', () => document.body.prepend(el('div', { class: 'lights', 'aria-hidden': 'true' })));
+
+// The MC with a speech bubble. size: '', 'small' or 'big'.
+function mcSays(text, size = '') {
+  return el('div', { class: 'mc-row' },
+    el('img', { class: 'mc ' + size, src: '/mc.svg', alt: 'MC Big Poppa Claus' }),
+    el('div', { class: 'bubble' }, text));
+}
+
+// Gold, red and white confetti for a right answer.
+function confetti(n = 70) {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const colors = ['#e8b931', '#f5cf5a', '#c8102e', '#ffffff'];
+  for (let i = 0; i < n; i++) {
+    const c = el('div', { class: 'confetti' });
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = 1.8 + Math.random() * 1.8 + 's';
+    c.style.animationDelay = Math.random() * 0.5 + 's';
+    document.body.append(c);
+    setTimeout(() => c.remove(), 4500);
+  }
 }

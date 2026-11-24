@@ -11,7 +11,7 @@
     .tvq { font-size: clamp(30px, 4.5vw, 60px); font-weight: 800; line-height: 1.2; text-align: center; margin: 20px 0; }
     .lobby { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; }
     .lobby img { width: 260px; height: 260px; background: #fff; border-radius: 16px; padding: 8px; }
-    .lobby code { font-size: 34px; color: var(--gold); word-break: break-all; }
+    .lobby code { font-size: 34px; color: var(--red); word-break: break-all; }
     #tvTimer { transform: scale(1.4); margin: 30px auto 30px; }
     .board li .name { font-size: 26px; } .board li .score { font-size: 30px; }
     @media (max-width: 700px) { .lobby { grid-template-columns: 1fr; text-align: center; } .lobby img { margin: 0 auto; } }
@@ -21,7 +21,7 @@
   <div class="wrap">
     <div class="brand-block">
       <div class="brand">HO HO HO'S IN THIS HOUSE</div>
-      <div class="tag" id="tagline"></div>
+      <div id="mcTv" style="margin-top:12px"></div>
     </div>
 
     <section id="t-lobby" class="card candy">
@@ -41,9 +41,14 @@
       <div id="tvTimer"></div>
       <div class="tvq" id="q"></div>
       <p class="center" id="status" style="font-size:24px"></p>
-      <div id="reveal" class="center hidden">
-        <div class="muted" style="font-size:22px">If you don't know, now you know:</div>
-        <div style="font: 400 clamp(32px,5vw,64px) Bungee, sans-serif; color: var(--gold); margin-top: 8px" id="a"></div>
+      <div id="reveal" class="hidden">
+        <div class="mc-row" style="gap:18px">
+          <img class="mc" src="/mc.svg" alt="MC Big Poppa Claus">
+          <div>
+            <div class="bubble" style="font-size:26px;max-width:none">If you don't know, now you know…</div>
+            <div style="font: 400 clamp(32px,5vw,64px) Bungee, sans-serif; color: var(--red); margin-top: 14px" id="a"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -62,12 +67,15 @@
     }
     showJoin(location.origin + '/');
     useWifiLink(showJoin);
-    $('#tagline').textContent = TAGLINES[0];
-    let ti = 0; setInterval(() => { ti = (ti + 1) % TAGLINES.length; $('#tagline').textContent = TAGLINES[ti]; }, 9000);
+    $('#mcTv').append(mcSays(TAGLINES[0]));
+    let ti = 0; setInterval(() => { ti = (ti + 1) % TAGLINES.length; $('#mcTv .bubble').textContent = TAGLINES[ti]; }, 9000);
     const timer = makeTimer($('#tvTimer'));
     const show = (id) => ['t-lobby', 't-q', 't-board'].forEach((x) => $('#' + x).classList.toggle('hidden', x !== id));
     socket.on('connect', () => socket.emit('tv:join'));
     socket.on('state', (st) => {
+      $('#mcTv').classList.toggle('hidden', !['lobby', 'leaderboard', 'final'].includes(st.phase));
+      if (st.phase === 'final' && !window.__c) { window.__c = true; confetti(160); }
+      if (st.phase !== 'final') window.__c = false;
       if (st.phase === 'lobby') {
         show('t-lobby');
         $('#count').textContent = `${st.playerCount} in the house`;
