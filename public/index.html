@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ho Ho Ho's In This House</title>
+  <meta name="theme-color" content="#070d22">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎄</text></svg>">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="conn" class="conn hidden">Reconnecting…</div>
+  <div class="wrap">
+    <div class="brand-block">
+      <div class="brand">HO HO HO'S<br>IN THIS HOUSE</div>
+      <div class="tag" id="tagline">There's some ho ho ho's in this house</div>
+      <div class="sub">Brooklyn Holiday Trivia</div>
+    </div>
+
+    <!-- join -->
+    <section id="v-join" class="card candy hidden">
+      <h2 style="font-size:20px;margin-bottom:12px">Where Brooklyn at?</h2>
+      <form id="joinForm">
+        <label for="name">Your name (what shows on the leaderboard)</label>
+        <input id="name" type="text" maxlength="24" autocomplete="nickname" placeholder="e.g. Auntie Dee" required>
+        <div style="height:12px"></div>
+        <button class="full" type="submit">Step in the house</button>
+        <div class="err" id="joinErr"></div>
+      </form>
+    </section>
+
+    <!-- lobby -->
+    <section id="v-lobby" class="card center hidden">
+      <div class="kicker">You're in</div>
+      <h2 id="lobbyName" style="font-size:28px;margin:8px 0"></h2>
+      <p class="muted" id="lobbyMsg">Grab some eggnog. The first question drops when the host is ready.</p>
+      <p class="pill" id="lobbyCount"></p>
+    </section>
+
+    <!-- question -->
+    <section id="v-question" class="card hidden">
+      <div class="kicker" id="qKicker"></div>
+      <div id="timer"></div>
+      <div class="question" id="qText"></div>
+      <form id="answerForm">
+        <input id="answer" type="text" maxlength="200" autocomplete="off" autocapitalize="off" placeholder="Type your answer">
+        <div style="height:10px"></div>
+        <button class="full green" id="lockBtn" type="submit">Lock it in</button>
+      </form>
+      <div id="locked" class="muted center hidden" style="margin-top:10px"></div>
+      <div class="err" id="ansErr"></div>
+    </section>
+
+    <!-- closed / reveal -->
+    <section id="v-closed" class="card center hidden">
+      <div class="kicker" id="cKicker"></div>
+      <div class="question" id="cText" style="margin-top:12px"></div>
+      <p class="muted" id="cMine"></p>
+      <div id="cWait"><h3 style="font-size:22px">Time's up! Pencils down.</h3><p class="muted">The host is checking answers…</p></div>
+      <div id="cReveal" class="hidden">
+        <div class="muted">The answer was</div>
+        <h2 id="cAnswer" style="font-size:28px;color:var(--gold);margin:6px 0 16px"></h2>
+        <div id="cResult" class="result"></div>
+      </div>
+    </section>
+
+    <!-- leaderboard -->
+    <section id="v-board" class="card hidden">
+      <div class="center">
+        <div class="kicker" id="bKicker">Leaderboard</div>
+        <h2 id="bTitle" style="font-size:26px;margin:6px 0 4px"></h2>
+        <p class="tag" id="bTag" style="font-size:20px;margin:4px 0 14px"></p>
+      </div>
+      <ol class="board" id="board"></ol>
+    </section>
+
+    <p class="center muted" id="footer"></p>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/common.js"></script>
+  <script>
+    const socket = io();
+    const store = {
+      get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
+      set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} },
+      del(k) { try { localStorage.removeItem(k); } catch (_) {} },
+    };
+    const views = ['join', 'lobby', 'question', 'closed', 'board'];
+    const show = (v) => views.forEach((x) => $('#v-' + x).classList.toggle('hidden', x !== v));
+    const timer = makeTimer($('#timer'));
+    let joined = false, lastState = null, lastQKey = '', submitted = '', resultLine = '';
+    $('#tagline').textContent = pick(TAGLINES);
+
+    function join(name) {
+      socket.emit('player:join', { token: store.get('ho3.token'), name }, (res) => {
+        if (!res.ok) {
+          joined = false;
+          if (!name) { show('join'); return; }
+          $('#joinErr').textContent = res.error;
+          return;
+        }
+        store.set('ho3.token', res.token);
+        store.set('ho3.name', res.name);
+        joined = true;
+        if (lastState) render(lastState);
+      });
+    }
+
+    socket.on('connect', () => {
+      $('#conn').classList.add('hidden');
+      if (store.get('ho3.token')) join(null); else show('join');
+    });
+    socket.on('disconnect', () => $('#conn').classList.remove('hidden'));
+    socket.on('kicked', () => {
+      store.del('ho3.token'); joined = false; show('join');
+      $('#joinErr').textContent = 'The host started fresh. Join again!';
+    });
+
+    $('#joinForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      $('#joinErr').textContent = '';
+      join($('#name').value);
+    });
+    $('#name').value = store.get('ho3.name') || '';
+
+    function sendAnswer(text, quiet) {
+      text = (text || '').trim();
+      if (!text) { if (!quiet) $('#ansErr').textContent = 'Type something first.'; return; }
+      socket.emit('player:answer', { text }, (res) => {
+        if (!res.ok) { if (!quiet) $('#ansErr').textContent = res.error; return; }
+        submitted = text;
+        $('#ansErr').textContent = '';
+        $('#locked').textContent = `Locked in: “${text}”. You can change it until time's up.`;
+        $('#locked').classList.remove('hidden');
+        $('#lockBtn').textContent = 'Change answer';
+      });
+    }
+    $('#answerForm').addEventListener('submit', (e) => { e.preventDefault(); sendAnswer($('#answer').value); });
+    timer.onZero(() => {
+      // Send whatever is typed if they never pressed the button.
+      const draft = $('#answer').value.trim();
+      if (draft && draft !== submitted) sendAnswer(draft, true);
+      $('#answer').disabled = true; $('#lockBtn').disabled = true;
+    });
+
+    socket.on('state', (st) => { lastState = st; if (joined) render(st); });
+
+    let prevPhase = null;
+    function render(st) {
+      const was = prevPhase; prevPhase = st.phase;
+      renderInner(st, was);
+    }
+    function renderInner(st, prevPhase) {
+      const qKey = `${st.roundIndex}-${st.questionNumber}`;
+      const kicker = `${st.roundTitle} · Question ${st.questionNumber} of ${st.questionCount}`;
+      $('#footer').textContent = st.me ? `${st.me.name} · ${st.me.score} point${st.me.score === 1 ? '' : 's'}` : '';
+
+      if (st.phase === 'lobby') {
+        show('lobby');
+        $('#lobbyName').textContent = st.me ? st.me.name : '';
+        $('#lobbyCount').textContent = `${st.playerCount} in the house`;
+      } else if (st.phase === 'question') {
+        if (qKey !== lastQKey) {
+          lastQKey = qKey; submitted = ''; resultLine = '';
+          $('#answer').value = ''; $('#locked').classList.add('hidden'); $('#ansErr').textContent = '';
+          $('#lockBtn').textContent = 'Lock it in';
+        }
+        if (st.myAnswer && !submitted) {
+          submitted = st.myAnswer;
+          $('#locked').textContent = `Locked in: “${st.myAnswer}”. You can change it until time's up.`;
+          $('#locked').classList.remove('hidden');
+        }
+        const wasHidden = $('#v-question').classList.contains('hidden');
+        show('question');
+        $('#qKicker').textContent = kicker;
+        $('#qText').textContent = st.question;
+        $('#answer').disabled = st.msLeft <= 0; $('#lockBtn').disabled = st.msLeft <= 0;
+        timer.set(st.msLeft, st.seconds);
+        if (wasHidden) setTimeout(() => $('#answer').focus(), 50);
+      } else if (st.phase === 'closed' || st.phase === 'reveal') {
+        // Time ran out before they pressed the button: send what they typed (server allows a short grace).
+        const draft = $('#answer').value.trim();
+        if (st.phase === 'closed' && prevPhase === 'question' && draft && draft !== submitted && st.msLeft === 0) sendAnswer(draft, true);
+        timer.stop();
+        show('closed');
+        $('#cKicker').textContent = kicker;
+        $('#cText').textContent = st.question;
+        $('#cMine').textContent = st.myAnswer ? `You said: “${st.myAnswer}”` : 'You didn’t get an answer in.';
+        const rev = st.phase === 'reveal';
+        $('#cWait').classList.toggle('hidden', rev);
+        $('#cReveal').classList.toggle('hidden', !rev);
+        if (rev) {
+          $('#cAnswer').textContent = st.answer;
+          if (!resultLine) resultLine = st.myCorrect ? pick(RIGHT_LINES) : pick(WRONG_LINES);
+          $('#cResult').className = 'result ' + (st.myCorrect ? 'yes' : 'no');
+          $('#cResult').textContent = (st.myCorrect ? '✅ ' : '❌ ') + resultLine;
+        }
+      } else if (st.phase === 'leaderboard' || st.phase === 'final') {
+        timer.stop();
+        show('board');
+        const final = st.phase === 'final';
+        $('#bKicker').textContent = final ? 'Final results' : 'Leaderboard';
+        $('#bTitle').textContent = final ? (st.leaderboard && st.leaderboard[0] ? `${st.leaderboard[0].name} runs Brooklyn!` : 'Thanks for playing!') : (st.boardTitle || 'Standings');
+        $('#bTag').textContent = final ? 'Merry Christmas to the whole borough' : (st.me && st.me.rank === 1 ? 'Big Poppa status 👑' : 'Spread love, it’s the Brooklyn way');
+        renderBoard($('#board'), st.leaderboard, st.me && st.me.name);
+      }
+    }
+  </script>
+</body>
+</html>

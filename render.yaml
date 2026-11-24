@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ho-ho-trivia
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: HOST_PIN
+        sync: false

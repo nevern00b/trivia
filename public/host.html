@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Host · Ho Ho Ho's In This House</title>
+  <meta name="theme-color" content="#070d22">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎅</text></svg>">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .grid .card { margin: 0 0 16px; }
+    .tabs { display: flex; gap: 8px; margin: 8px 0 0; }
+    .tabs button { background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+    .tabs button.on { background: var(--gold); color: #1a1300; border-color: var(--gold); }
+    .topbar { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between; padding-top: 12px; }
+    .topbar .brand { font-size: 24px; text-shadow: 2px 2px 0 var(--red); }
+    .linkbox { display: flex; gap: 12px; align-items: center; background: rgba(0,0,0,.25); border: 1px solid var(--line); padding: 10px; border-radius: 14px; }
+    .linkbox img { width: 84px; height: 84px; border-radius: 8px; background: #fff; }
+    .linkbox code { font-size: 15px; color: var(--gold); word-break: break-all; }
+    .phase { font: 400 12px Bungee, sans-serif; padding: 4px 10px; border-radius: 999px; background: var(--red); }
+    .ans { width: 100%; border-collapse: collapse; }
+    .ans td { padding: 9px 6px; border-top: 1px solid var(--line); vertical-align: middle; }
+    .ans td.n { font-weight: 700; width: 30%; }
+    .ans td.t { word-break: break-word; }
+    .ans td.m { white-space: nowrap; text-align: right; }
+    .mark { padding: 7px 11px; font-size: 15px; border-radius: 9px; background: transparent; color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+    .mark.yes.on { background: var(--green); color: #04220f; border-color: var(--green); }
+    .mark.no.on { background: var(--red); color: #fff; border-color: var(--red); }
+    .qlist { list-style: none; margin: 0; padding: 0; }
+    .qlist li { display: flex; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+    .qlist li .txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .qlist li.now { color: var(--gold); font-weight: 700; }
+    .qlist li.done .txt { color: var(--muted); text-decoration: line-through; }
+    .plist li { display: flex; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); }
+    .plist { list-style: none; margin: 0; padding: 0; }
+    .plist .name { flex: 1; font-weight: 600; }
+    .plist .score { font: 400 18px Bungee, sans-serif; color: var(--gold); min-width: 28px; text-align: right; }
+    .x { background: transparent; color: var(--muted); border: 0; box-shadow: none; padding: 4px 8px; font-size: 16px; }
+    .bigq { font-size: 24px; font-weight: 800; line-height: 1.25; margin: 6px 0; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .editor-round { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; background: rgba(0,0,0,.18); }
+    .qrow { display: grid; grid-template-columns: 28px minmax(0, 2fr) minmax(0, 1fr) 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .qrow input { font-size: 15px; padding: 10px; }
+    @media (max-width: 640px) { .qrow { grid-template-columns: 22px 1fr 36px; } .qrow .a { grid-column: 2; } }
+    .banner { background: rgba(246,196,83,.15); border: 2px solid var(--gold); border-radius: 14px; padding: 14px; margin: 12px 0; }
+    #timerHost { transform: scale(.8); margin: -8px auto 0; }
+  </style>
+</head>
+<body>
+  <div id="conn" class="conn hidden">Reconnecting to the server…</div>
+
+  <!-- PIN gate -->
+  <div class="wrap" id="gate">
+    <div class="brand-block">
+      <div class="brand">HOST HQ</div>
+      <div class="tag">There's some ho ho ho's in this house</div>
+    </div>
+    <form class="card candy" id="pinForm">
+      <label for="pin">Host PIN</label>
+      <input id="pin" type="password" autocomplete="current-password" placeholder="Host PIN">
+      <div style="height:12px"></div>
+      <button class="full">Run the show</button>
+      <div class="err" id="pinErr"></div>
+    </form>
+  </div>
+
+  <div class="wrap wide hidden" id="app">
+    <div class="topbar">
+      <div>
+        <div class="brand">HO HO HO'S IN THIS HOUSE</div>
+        <div class="tabs">
+          <button class="on" data-tab="game">Run the game</button>
+          <button data-tab="questions">Questions</button>
+        </div>
+      </div>
+      <div class="linkbox">
+        <img id="qr" alt="QR code for the player link">
+        <div>
+          <div class="muted" style="font-size:13px">Guests join at</div>
+          <code id="joinUrl"></code>
+          <div class="row" style="margin-top:6px">
+            <button class="small ghost" id="copyLink">Copy link</button>
+            <a class="btn small ghost" id="tvLink" target="_blank" style="padding:8px 12px;font-size:14px;color:var(--ink);border:1px solid var(--line);background:transparent;box-shadow:none">Open TV screen</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="restoreBanner" class="banner hidden">
+      <strong>Looks like the server restarted.</strong> This browser saved the game in progress
+      (<span id="restoreInfo"></span>). Restore it?
+      <div class="row" style="margin-top:10px"><button class="small" id="restoreYes">Restore game</button><button class="small ghost" id="restoreNo">No, start fresh</button></div>
+    </div>
+
+    <!-- GAME TAB -->
+    <section id="tab-game" class="grid" style="margin-top:16px">
+      <div>
+        <div class="card">
+          <div class="row"><span class="phase" id="phase">LOBBY</span><span class="muted" id="where"></span><span class="grow"></span><span class="pill" id="answered"></span></div>
+          <div id="nowBox">
+            <div class="bigq" id="nowQ"></div>
+            <div class="muted" id="nowA"></div>
+          </div>
+          <div id="timerHost" class="hidden"></div>
+          <div class="controls" id="controls"></div>
+        </div>
+
+        <div class="card" id="answersCard">
+          <div class="row"><h3 style="font-size:18px">Answers</h3><span class="grow"></span><span class="muted" style="font-size:13px">Auto-checked. Tap ✓ or ✗ to overrule.</span></div>
+          <table class="ans"><tbody id="answers"></tbody></table>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="row"><h3 style="font-size:18px">Players &amp; scores</h3><span class="grow"></span><span class="pill" id="pcount"></span></div>
+          <ul class="plist" id="players"></ul>
+        </div>
+        <div class="card">
+          <h3 style="font-size:18px;margin-bottom:6px">All questions</h3>
+          <p class="muted" style="font-size:13px;margin:0 0 6px">Release any question out of order with ▶.</p>
+          <div id="qlist"></div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:18px;margin-bottom:10px">Start over</h3>
+          <div class="row">
+            <button class="small ghost" id="resetScores">Reset scores, keep players</button>
+            <button class="small red" id="newGame">New game, everyone rejoins</button>
+          </div>
+          <p class="muted" style="font-size:13px">Click a button twice to confirm.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUESTIONS TAB -->
+    <section id="tab-questions" class="hidden" style="margin-top:16px">
+      <div class="card">
+        <div class="row">
+          <h3 style="font-size:20px">Edit questions</h3><span class="grow"></span>
+          <span class="muted" id="saveStatus" style="font-size:14px"></span>
+          <button id="saveQ" class="green">Save questions</button>
+        </div>
+        <p class="muted" style="font-size:14px">
+          Put more than one accepted answer with a <strong>|</strong> between them, like <code>Macy's|Macys</code>.
+          The first one is what guests see when you reveal. Small typos are forgiven automatically, and you can always overrule.
+        </p>
+        <div id="editor"></div>
+        <div class="row"><button class="ghost" id="addRound">+ Add a round</button></div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:18px">Paste a whole list at once</h3>
+        <p class="muted" style="font-size:14px">One question per line as <code>Question | Answer</code>. Start each round with a line like <code># Round 1: Brooklyn Zoo</code>. This replaces everything in the editor above (you still need to press Save).</p>
+        <textarea id="bulk" rows="10" placeholder="# Round 1: Brooklyn Zoo&#10;Which bridge opened in 1883? | Brooklyn Bridge&#10;&#10;# Round 2: Christmas&#10;Which reindeer has a red nose? | Rudolph"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="small" id="bulkLoad">Load into editor</button>
+          <button class="small ghost" id="bulkFill">Show current questions as text</button>
+          <span class="grow"></span>
+          <button class="small ghost" id="download">Download backup file</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/common.js"></script>
+  <script>
+    const socket = io();
+    const store = {
+      get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } },
+      set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} },
+      del(k) { try { localStorage.removeItem(k); } catch (_) {} },
+    };
+    let S = null;            // latest host state
+    let authed = false, firstState = true, editorDirty = false;
+    let draft = [];          // rounds being edited
+    const timer = makeTimer($('#timerHost'));
+
+    const joinUrl = location.origin + '/';
+    $('#joinUrl').textContent = joinUrl.replace(/^https?:\/\//, '');
+    $('#qr').src = '/qr.svg?u=' + encodeURIComponent(joinUrl);
+    $('#tvLink').href = '/tv';
+    $('#copyLink').onclick = () => navigator.clipboard.writeText(joinUrl).then(() => toast('Link copied'), () => toast(joinUrl));
+
+    // ---------- auth ----------
+    function auth(pin) {
+      socket.emit('host:auth', { pin }, (res) => {
+        if (!res.ok) { $('#pinErr').textContent = res.error; authed = false; $('#gate').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
+        store.set('ho3.pin', pin);
+        authed = true;
+        $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
+      });
+    }
+    $('#pinForm').onsubmit = (e) => { e.preventDefault(); $('#pinErr').textContent = ''; auth($('#pin').value); };
+    socket.on('connect', () => { $('#conn').classList.add('hidden'); firstState = true; const p = store.get('ho3.pin'); if (p) auth(p); });
+    socket.on('disconnect', () => $('#conn').classList.remove('hidden'));
+
+    const send = (ev, payload) => new Promise((resolve) => socket.emit(ev, payload || {}, (res) => { if (res && !res.ok) toast(res.error); resolve(res); }));
+
+    // ---------- tabs ----------
+    document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
+      document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b));
+      $('#tab-game').classList.toggle('hidden', b.dataset.tab !== 'game');
+      $('#tab-questions').classList.toggle('hidden', b.dataset.tab !== 'questions');
+    });
+
+    // two-click confirm
+    function confirmBtn(btn, fn) {
+      const label = btn.textContent; let armed = null;
+      btn.onclick = () => {
+        if (armed) { clearTimeout(armed); armed = null; btn.textContent = label; fn(); return; }
+        btn.textContent = 'Sure? Click again';
+        armed = setTimeout(() => { armed = null; btn.textContent = label; }, 3000);
+      };
+    }
+    confirmBtn($('#resetScores'), () => send('host:resetScores'));
+    confirmBtn($('#newGame'), () => { store.del('ho3.snapshot'); send('host:newGame'); });
+
+    // ---------- state ----------
+    socket.on('host:state', (st) => {
+      S = st;
+      if (firstState) { firstState = false; onFirstState(st); }
+      // keep a backup of the running game in this browser
+      if (st.players.length || Object.keys(st.played).length) store.set('ho3.snapshot', st.snapshot);
+      renderGame();
+      if (!editorDirty) { draft = JSON.parse(JSON.stringify(st.rounds)); renderEditor(); }
+    });
+
+    function onFirstState(st) {
+      const localQ = store.get('ho3.questions');
+      if (localQ && localQ.savedAt > (st.questionsSavedAt || 0) && Array.isArray(localQ.rounds)) {
+        send('host:saveQuestions', localQ).then((r) => r && r.ok && toast('Put your saved questions back on the server'));
+      }
+      const snap = store.get('ho3.snapshot');
+      const serverEmpty = !st.players.length && !Object.keys(st.played).length;
+      if (snap && serverEmpty && snap.game && Object.keys(snap.game.players || {}).length && Date.now() - snap.savedAt < 12 * 3600e3) {
+        const n = Object.keys(snap.game.players).length;
+        $('#restoreInfo').textContent = `${n} player${n === 1 ? '' : 's'}, saved ${new Date(snap.savedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+        $('#restoreBanner').classList.remove('hidden');
+      }
+    }
+    $('#restoreYes').onclick = () => { send('host:restore', { snapshot: store.get('ho3.snapshot') }); $('#restoreBanner').classList.add('hidden'); };
+    $('#restoreNo').onclick = () => { store.del('ho3.snapshot'); $('#restoreBanner').classList.add('hidden'); };
+
+    function nextQuestion() {
+      // the next unplayed question after the current one, then any unplayed one
+      const all = [];
+      S.rounds.forEach((r, ri) => r.questions.forEach((_, qi) => all.push([ri, qi])));
+      const cur = all.findIndex(([r, q]) => r === S.r && q === S.q);
+      const order = all.slice(cur + 1).concat(all.slice(0, cur + 1));
+      return order.find(([r, q]) => !S.played[`${r}-${q}`]) || null;
+    }
+    const roundDone = () => S.q >= 0 && S.rounds[S.r] && S.rounds[S.r].questions.every((_, qi) => S.played[`${S.r}-${qi}`]);
+
+    function renderGame() {
+      const st = S;
+      const labels = { lobby: 'Lobby', question: 'Live', closed: "Time's up", reveal: 'Answer shown', leaderboard: 'Leaderboard', final: 'Final' };
+      $('#phase').textContent = labels[st.phase];
+      $('#phase').style.background = st.phase === 'question' ? 'var(--green)' : st.phase === 'closed' ? 'var(--red)' : 'var(--card-2)';
+      const curQ = st.q >= 0 && st.rounds[st.r] ? st.rounds[st.r].questions[st.q] : null;
+      $('#where').textContent = curQ ? `${st.rounds[st.r].title} · Q${st.q + 1} of ${st.rounds[st.r].questions.length}` : 'No question released yet';
+      $('#nowQ').textContent = curQ ? curQ.q : 'Waiting for guests. Release the first question when everyone is in.';
+      $('#nowA').textContent = curQ ? `Answer: ${curQ.a.split('|').join(' / ')}` : '';
+      const live = st.phase === 'question';
+      $('#timerHost').classList.toggle('hidden', !live);
+      if (live) timer.set(st.msLeft, st.seconds); else timer.stop();
+      $('#answered').textContent = curQ ? `${st.currentAnswers.filter((a) => a.text != null).length}/${st.players.length} answered` : '';
+
+      // controls
+      const c = $('#controls'); c.replaceChildren();
+      const nq = nextQuestion();
+      const btn = (text, cls, fn) => c.append(el('button', { class: cls, onclick: fn }, text));
+      if (live) btn('End timer now', 'red', () => send('host:close'));
+      if (st.phase === 'closed') btn('Reveal answer to everyone', '', () => send('host:reveal'));
+      if (!live && st.phase !== 'closed') {
+        if (st.phase === 'reveal' && roundDone()) {
+          btn(`Show leaderboard: end of ${st.rounds[st.r].title}`, '', () => send('host:leaderboard', { title: `After ${st.rounds[st.r].title}` }));
+        }
+        if (nq) {
+          const sameRound = nq[0] === st.r;
+          const lbl = st.phase === 'lobby' && st.q < 0 ? 'Release first question' : sameRound ? 'Release next question' : `Start ${st.rounds[nq[0]].title}`;
+          btn(`${lbl} ▶`, st.phase === 'reveal' && roundDone() ? 'ghost' : 'green', () => send('host:release', { r: nq[0], q: nq[1] }));
+        } else if (st.phase !== 'final' && st.q >= 0) {
+          btn('Show final results 🏆', 'green', () => send('host:final'));
+        }
+      }
+      if (!live && st.phase !== 'leaderboard' && st.phase !== 'final' && !(st.phase === 'reveal' && roundDone())) btn('Show leaderboard', 'ghost', () => send('host:leaderboard', { title: 'Standings so far' }));
+      if (st.phase !== 'lobby' && !live) btn('Back to lobby screen', 'ghost', () => send('host:lobby'));
+      if (st.phase === 'leaderboard' && !nq) btn('Show final results 🏆', 'green', () => send('host:final'));
+
+      // answers
+      const tb = $('#answers'); tb.replaceChildren();
+      $('#answersCard').classList.toggle('hidden', !curQ);
+      const rows = [...st.currentAnswers].sort((a, b) => (a.text == null) - (b.text == null) || (a.at || 0) - (b.at || 0));
+      for (const a of rows) {
+        const has = a.text != null;
+        tb.append(el('tr', {},
+          el('td', { class: 'n' }, a.name),
+          el('td', { class: 't' + (has ? '' : ' muted') }, has ? a.text : (live ? 'thinking…' : 'no answer')),
+          el('td', { class: 'm' }, has ? [
+            el('button', { class: 'mark yes' + (a.correct ? ' on' : ''), title: 'Right', onclick: () => send('host:mark', { playerId: a.playerId, correct: true }) }, '✓'), ' ',
+            el('button', { class: 'mark no' + (!a.correct ? ' on' : ''), title: 'Wrong', onclick: () => send('host:mark', { playerId: a.playerId, correct: false }) }, '✗'),
+          ] : '')));
+      }
+      if (!rows.length) tb.append(el('tr', {}, el('td', { class: 'muted' }, 'Nobody has joined yet.')));
+
+      // players
+      $('#pcount').textContent = `${st.players.length} playing`;
+      $('#players').replaceChildren(...st.players.map((p) => el('li', {},
+        el('span', { class: 'muted', style: 'width:26px' }, p.rank),
+        el('span', { class: 'dot' + (p.online ? ' on' : ''), title: p.online ? 'Connected' : 'Not connected' }),
+        el('span', { class: 'name' }, p.name),
+        el('span', { class: 'score' }, p.score),
+        kickBtn(p))));
+      if (!st.players.length) $('#players').append(el('li', { class: 'muted' }, 'Share the link or QR code to get people in.'));
+
+      // question list
+      $('#qlist').replaceChildren(...st.rounds.map((r, ri) => el('div', { style: 'margin-top:10px' },
+        el('div', { class: 'kicker' }, r.title),
+        el('ul', { class: 'qlist' }, r.questions.map((q, qi) => {
+          const now = ri === st.r && qi === st.q, done = st.played[`${ri}-${qi}`];
+          return el('li', { class: (now ? 'now ' : '') + (done && !now ? 'done' : '') },
+            el('span', { class: 'muted', style: 'width:22px' }, qi + 1),
+            el('span', { class: 'txt', title: q.q }, q.q),
+            el('button', { class: 'small ghost', disabled: live, title: done ? 'Play again' : 'Release this question', onclick: () => send('host:release', { r: ri, q: qi }) }, '▶'));
+        })))));
+    }
+    function kickBtn(p) {
+      const b = el('button', { class: 'x', title: `Remove ${p.name}` }, '✕');
+      confirmBtn(b, () => send('host:kick', { playerId: p.id }));
+      return b;
+    }
+
+    // ---------- question editor ----------
+    function markDirty() { editorDirty = true; $('#saveStatus').textContent = 'Unsaved changes'; }
+    function renderEditor() {
+      const ed = $('#editor'); ed.replaceChildren();
+      draft.forEach((r, ri) => {
+        const box = el('div', { class: 'editor-round' });
+        const title = el('input', { type: 'text', value: r.title, placeholder: `Round ${ri + 1} name` });
+        title.oninput = () => { r.title = title.value; markDirty(); };
+        box.append(el('div', { class: 'row', style: 'margin-bottom:10px' },
+          el('div', { class: 'grow' }, title),
+          el('button', { class: 'small ghost', onclick: () => { draft.splice(ri, 1); markDirty(); renderEditor(); } }, 'Remove round')));
+        r.questions.forEach((q, qi) => {
+          const qi_ = el('input', { type: 'text', value: q.q, placeholder: 'Question' });
+          const ai = el('input', { type: 'text', value: q.a, placeholder: 'Answer', class: 'a' });
+          qi_.oninput = () => { q.q = qi_.value; markDirty(); };
+          ai.oninput = () => { q.a = ai.value; markDirty(); };
+          box.append(el('div', { class: 'qrow' },
+            el('span', { class: 'muted' }, qi + 1), qi_, ai,
+            el('button', { class: 'x', title: 'Delete question', onclick: () => { r.questions.splice(qi, 1); markDirty(); renderEditor(); } }, '✕')));
+        });
+        box.append(el('button', { class: 'small ghost', onclick: () => { r.questions.push({ q: '', a: '' }); markDirty(); renderEditor(); box.parentNode && ed.children[ri].querySelectorAll('.qrow input')[r.questions.length * 2 - 2]?.focus(); } }, '+ Add question'));
+        ed.append(box);
+      });
+    }
+    $('#addRound').onclick = () => { draft.push({ title: `Round ${draft.length + 1}`, questions: [{ q: '', a: '' }] }); markDirty(); renderEditor(); };
+    $('#saveQ').onclick = async () => {
+      const rounds = draft.map((r) => ({ title: r.title.trim() || 'Round', questions: r.questions.filter((q) => q.q.trim()).map((q) => ({ q: q.q.trim(), a: q.a.trim() })) }));
+      const missing = rounds.flatMap((r) => r.questions).filter((q) => !q.a).length;
+      const payload = { rounds, savedAt: Date.now() };
+      const res = await send('host:saveQuestions', payload);
+      if (res && res.ok) {
+        store.set('ho3.questions', payload);
+        editorDirty = false;
+        $('#saveStatus').textContent = 'Saved ✓' + (missing ? ` (${missing} question${missing === 1 ? ' has' : 's have'} no answer yet)` : '');
+        draft = JSON.parse(JSON.stringify(rounds)); renderEditor();
+      }
+    };
+    $('#bulkFill').onclick = () => {
+      $('#bulk').value = draft.map((r) => `# ${r.title}\n` + r.questions.map((q) => `${q.q} | ${q.a}`).join('\n')).join('\n\n');
+    };
+    $('#bulkLoad').onclick = () => {
+      const rounds = []; let cur = null;
+      for (const raw of $('#bulk').value.split('\n')) {
+        const line = raw.trim();
+        if (!line) continue;
+        if (line.startsWith('#')) { cur = { title: line.replace(/^#+\s*/, '') || `Round ${rounds.length + 1}`, questions: [] }; rounds.push(cur); continue; }
+        if (!cur) { cur = { title: `Round ${rounds.length + 1}`, questions: [] }; rounds.push(cur); }
+        const i = line.indexOf('|');
+        cur.questions.push(i < 0 ? { q: line, a: '' } : { q: line.slice(0, i).trim(), a: line.slice(i + 1).trim() });
+      }
+      if (!rounds.length) return toast('Nothing to load');
+      draft = rounds; markDirty(); renderEditor(); toast('Loaded. Check it over, then press Save.');
+    };
+    $('#download').onclick = () => {
+      const blob = new Blob([JSON.stringify({ rounds: draft }, null, 2)], { type: 'application/json' });
+      const a = el('a', { href: URL.createObjectURL(blob), download: 'questions.json' });
+      document.body.append(a); a.click(); a.remove();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "ho-ho-trivia",
+  "version": "1.0.0",
+  "description": "Brooklyn Christmas party trivia: host view, player view and TV view, live over Socket.io.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1"
+  }
+}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TV · Ho Ho Ho's In This House</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .wrap { max-width: 1100px; }
+    .tvq { font-size: clamp(30px, 4.5vw, 60px); font-weight: 800; line-height: 1.2; text-align: center; margin: 20px 0; }
+    .lobby { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; }
+    .lobby img { width: 260px; height: 260px; background: #fff; border-radius: 16px; padding: 8px; }
+    .lobby code { font-size: 34px; color: var(--gold); word-break: break-all; }
+    #tvTimer { transform: scale(1.4); margin: 30px auto 30px; }
+    .board li .name { font-size: 26px; } .board li .score { font-size: 30px; }
+    @media (max-width: 700px) { .lobby { grid-template-columns: 1fr; text-align: center; } .lobby img { margin: 0 auto; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand-block">
+      <div class="brand">HO HO HO'S IN THIS HOUSE</div>
+      <div class="tag" id="tagline"></div>
+    </div>
+
+    <section id="t-lobby" class="card candy">
+      <div class="lobby">
+        <img id="qr" alt="QR code to join">
+        <div>
+          <h2 style="font-size:32px">Scan to play</h2>
+          <p class="muted" style="font-size:20px">or go to</p>
+          <code id="url"></code>
+          <p style="font-size:22px;margin-top:20px"><span class="pill" id="count" style="font-size:20px"></span></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="t-q" class="card hidden">
+      <div class="kicker center" id="kicker" style="font-size:18px"></div>
+      <div id="tvTimer"></div>
+      <div class="tvq" id="q"></div>
+      <p class="center" id="status" style="font-size:24px"></p>
+      <div id="reveal" class="center hidden">
+        <div class="muted" style="font-size:22px">If you don't know, now you know:</div>
+        <div style="font: 400 clamp(32px,5vw,64px) Bungee, sans-serif; color: var(--gold); margin-top: 8px" id="a"></div>
+      </div>
+    </section>
+
+    <section id="t-board" class="card hidden">
+      <div class="center"><div class="kicker" id="bk" style="font-size:18px"></div><h2 id="bt" style="font-size:40px;margin:8px 0 20px"></h2></div>
+      <ol class="board" id="board"></ol>
+    </section>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/common.js"></script>
+  <script>
+    const socket = io();
+    const url = location.origin + '/';
+    $('#qr').src = '/qr.svg?u=' + encodeURIComponent(url);
+    $('#url').textContent = url.replace(/^https?:\/\//, '');
+    $('#tagline').textContent = TAGLINES[0];
+    let ti = 0; setInterval(() => { ti = (ti + 1) % TAGLINES.length; $('#tagline').textContent = TAGLINES[ti]; }, 9000);
+    const timer = makeTimer($('#tvTimer'));
+    const show = (id) => ['t-lobby', 't-q', 't-board'].forEach((x) => $('#' + x).classList.toggle('hidden', x !== id));
+    socket.on('connect', () => socket.emit('tv:join'));
+    socket.on('state', (st) => {
+      if (st.phase === 'lobby') {
+        show('t-lobby');
+        $('#count').textContent = `${st.playerCount} in the house`;
+      } else if (['question', 'closed', 'reveal'].includes(st.phase)) {
+        show('t-q');
+        $('#kicker').textContent = `${st.roundTitle} · Question ${st.questionNumber} of ${st.questionCount}`;
+        $('#q').textContent = st.question;
+        $('#tvTimer').classList.toggle('hidden', st.phase !== 'question');
+        if (st.phase === 'question') timer.set(st.msLeft, st.seconds); else timer.stop();
+        $('#status').textContent = st.phase === 'question' ? `${st.answeredCount} of ${st.playerCount} locked in` : st.phase === 'closed' ? "Time's up! Pencils down." : '';
+        $('#reveal').classList.toggle('hidden', st.phase !== 'reveal');
+        $('#a').textContent = st.answer || '';
+      } else {
+        show('t-board');
+        const final = st.phase === 'final';
+        $('#bk').textContent = final ? 'Final results' : 'Leaderboard';
+        $('#bt').textContent = final ? (st.leaderboard[0] ? `${st.leaderboard[0].name} runs Brooklyn! 👑` : 'Thanks for playing!') : (st.boardTitle || 'Standings');
+        renderBoard($('#board'), st.leaderboard);
+      }
+    });
+  </script>
+</body>
+</html>

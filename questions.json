@@ -1,0 +1,34 @@
+{
+  "rounds": [
+    {
+      "title": "Round 1: Brooklyn Zoo",
+      "questions": [
+        { "q": "Which bridge, opened in 1883, connects Brooklyn to Manhattan?", "a": "Brooklyn Bridge|Brooklyn" },
+        { "q": "Which Brooklyn neighborhood is famous for its over-the-top Christmas light displays?", "a": "Dyker Heights|Dyker" },
+        { "q": "Which beachside spot is home to the Cyclone roller coaster?", "a": "Coney Island|Coney" },
+        { "q": "Which baseball team left Brooklyn for Los Angeles after the 1957 season?", "a": "Dodgers|Brooklyn Dodgers" },
+        { "q": "What was the title of The Notorious B.I.G.'s 1994 debut album?", "a": "Ready to Die" }
+      ]
+    },
+    {
+      "title": "Round 2: Christmas in the Concrete Jungle",
+      "questions": [
+        { "q": "In Home Alone 2, which city does Kevin get lost in?", "a": "New York|New York City|NYC" },
+        { "q": "In the original Miracle on 34th Street, which department store hires Kris Kringle?", "a": "Macy's|Macys" },
+        { "q": "In The Twelve Days of Christmas, what is given on the fifth day?", "a": "Five golden rings|Golden rings|Rings" },
+        { "q": "Which reindeer has a very shiny red nose?", "a": "Rudolph" },
+        { "q": "Where in Midtown Manhattan does the famous giant Christmas tree go up every year?", "a": "Rockefeller Center|Rockefeller|Rockefeller Plaza" }
+      ]
+    },
+    {
+      "title": "Round 3: Big Poppa's Mixed Bag",
+      "questions": [
+        { "q": "Which New York City borough borders Brooklyn to the east?", "a": "Queens" },
+        { "q": "Which NBA team plays its home games at Barclays Center?", "a": "Brooklyn Nets|Nets" },
+        { "q": "What is the name of the Grinch's dog?", "a": "Max" },
+        { "q": "What was The Notorious B.I.G.'s real first name?", "a": "Christopher|Chris" },
+        { "q": "Nathan's on Coney Island is famous for which food?", "a": "Hot dogs|Hot dog|Hotdogs|Hotdog" }
+      ]
+    }
+  ]
+}
